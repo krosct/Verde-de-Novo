@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta
+      name="description"
+      content="Fotografe a planta inteira e veja a espécie provável, o que merece atenção e como ajudá-la a crescer. Não é diagnóstico."
+    />
+    <title>Verde de Novo</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  </head>
+  <body>
+    <main id="app">
+      <header class="head">
+        <div class="brand">
+          <img class="avatar" src="/img/perfil.webp" alt="" width="120" height="120" />
+          <h1>Verde de Novo</h1>
+        </div>
+        <p class="tagline">
+          <b>Sua planta agradece.</b> Uma foto e você sabe como ajudá-la a crescer.
+        </p>
+      </header>
+
+      <section id="consent" class="card">
+        <h2>Antes de começar</h2>
+        <ul class="consent-list">
+          <li>A foto da planta é enviada para análise e não fica guardada em lugar nenhum.</li>
+          <li>O app identifica a espécie e olha folhas, caule, terra e raízes, se aparecerem.</li>
+          <li>Se a foto não estiver clara, o app pede outra em vez de chutar.</li>
+          <li>É orientação de jardinagem, <b>não é diagnóstico</b>.</li>
+        </ul>
+        <label class="check">
+          <input type="checkbox" id="consent-check" />
+          <span>Entendi e autorizo o envio da foto para análise.</span>
+        </label>
+        <button id="consent-accept" class="primary" disabled>Começar</button>
+      </section>
+
+      <section id="main" class="hidden">
+        <div id="stage" class="stage">
+          <video id="preview" class="hidden" playsinline muted autoplay></video>
+          <img id="snapshot" class="hidden" alt="Foto enviada para análise" />
+          <div id="hud" class="hud" data-result="idle" data-camera="off">
+            <span class="hud-dot"></span>
+            <span id="hud-text">Câmera desligada</span>
+          </div>
+        </div>
+
+        <p id="status" class="status" data-result="idle" role="status">Pronto para começar</p>
+        <p id="status-detail" class="status-detail">
+          Enquadre a planta inteira: folhas, caule e terra, com boa luz.
+        </p>
+
+        <div class="controls">
+          <button id="toggle" class="primary" data-state="idle">Tirar foto</button>
+          <button
+            id="gallery"
+            class="secondary icon-button"
+            type="button"
+            aria-label="Escolher da galeria"
+            title="Escolher da galeria"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="9" cy="9" r="2" />
+              <path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" />
+            </svg>
+          </button>
+          <button
+            id="restart"
+            class="secondary icon-button"
+            type="button"
+            aria-label="Recomeçar com outra foto"
+            title="Recomeçar com outra foto"
+            disabled
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+          </button>
+        </div>
+
+        <div id="species-meta" class="session hidden">
+          <span>Espécie: <i id="species-scientific"></i></span>
+          <span>Confiança: <b id="species-confidence">0%</b></span>
+        </div>
+        <p id="alternatives" class="reason hidden"></p>
+
+        <p id="hint" class="hint">Não é diagnóstico; é uma pista para você verificar.</p>
+
+        <section id="conditions" class="card result hidden" aria-live="polite">
+          <h2>O que encontramos</h2>
+          <div id="conditions-list"></div>
+        </section>
+
+        <section id="observed" class="card result hidden">
+          <h2>O que observamos</h2>
+          <div id="observed-list"></div>
+        </section>
+
+        <section id="care" class="card result hidden">
+          <h2>Para ela crescer melhor</h2>
+          <div id="care-list"></div>
+          <p class="disclaimer">Não é diagnóstico; é uma pista para você verificar.</p>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
