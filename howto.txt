@@ -1,0 +1,136 @@
+Verde de Novo - How to run
+==========================
+
+WHAT IT IS
+----------
+A web app (PWA) that takes a photo of a whole houseplant and returns its likely
+species, what it sees in each visible part, the conditions that points to, and
+care suggestions. It is NOT a diagnosis. Analysis runs step by step on the
+server (gate -> species -> parts -> per-part observations -> rules).
+The backend proxy holds the vendor API key; the client never sees it.
+
+
+REQUIREMENTS
+------------
+- Node.js 18+ (this project was tested on Node 26) and npm.
+- A Python virtualenv at ~/.venv with:
+    fastapi, "uvicorn[standard]", python-multipart, httpx, python-dotenv, pillow
+  Install once with:
+    ~/.venv/bin/pip install fastapi "uvicorn[standard]" python-multipart httpx python-dotenv pillow
+
+
+QUICK START
+-----------
+1. Install the frontend dependencies (first time only):
+     npm install
+
+2. Build the frontend and start the whole app with ONE command:
+     npm start
+
+3. Open http://localhost:8000 in your browser.
+
+`npm start` builds the site, then runs the FastAPI server that serves both the
+website and the API on port 8000. It runs in "stub" mode by default, so it works
+with no configuration and no internet. The stub does NOT look at the plant: it
+derives fake answers from the photo bytes (same photo, same answer).
+
+
+DEVELOPMENT (hot reload, two processes)
+---------------------------------------
+     npm run dev
+
+This starts Vite (frontend, port 5173) and FastAPI (backend, port 8000, reload on
+change) together. The Vite dev server proxies /api to the backend. Open
+http://localhost:5173.
+
+Individual processes:
+     npm run dev:web    # Vite only (5173)
+     npm run dev:api    # FastAPI only (8000, reload)
+
+
+OTHER COMMANDS
+--------------
+     npm run build      # typecheck + production build into dist/
+     npm run typecheck  # tsc --noEmit
+     npm run lint       # eslint .
+     npm test           # frontend tests (vitest)
+     npm run test:py    # backend tests (pytest)
+     ~/.venv/bin/ruff check server tests   # python lint
+
+
+CONFIGURATION
+-------------
+Values can come from three places. Precedence (highest to lowest):
+
+     command-line argument  >  .env file  >  built-in default
+
+- The .env file is read from the project root. A template is provided in
+  "env.example": copy it to ".env" and fill in what you need.
+     cp env.example .env
+- Command-line arguments override .env. Pass them after "npm start --":
+     npm start -- --port 9000 --confidence-threshold 0.7
+
+
+VARIABLES
+---------
+Mandatory: NONE. The app runs out of the box with the stub vendor.
+
+Variable               Required?   Default   Description
+---------------------- ----------- --------- --------------------------------
+VISION_PROVIDER        No          stub      Only "stub" for now; real vendors are
+                                             added in server/vendor.py
+VISION_API_URL         No          (empty)   Reserved for the real vendor
+VISION_API_KEY         No          (empty)   Reserved for the real vendor (server-side only)
+HOST                   No          0.0.0.0   Bind address
+PORT                   No          8000      Bind port
+STATIC_DIR             No          dist      Folder with the built frontend
+CONFIDENCE_THRESHOLD   No          0.6       Minimum confidence for each analysis step
+MAX_IMAGE_MB           No          2.5       Max accepted upload size (MB)
+RATE_LIMIT             No          10        Requests allowed per window
+RATE_WINDOW            No          60        Rate-limit window, in seconds
+RELOAD                 No          false     Auto-reload the server on change
+PORT_SEARCH            No          true      If PORT is busy, try the next free one
+
+Notes:
+- An empty value in .env (e.g. VISION_API_KEY=) is treated as "not set".
+
+
+COMMAND-LINE ARGUMENTS (override .env)
+--------------------------------------
+     --host                    bind address
+     --port                    bind port
+     --static-dir              folder with the built frontend
+     --vision-provider         stub
+     --vision-url              vendor endpoint URL (reserved)
+     --vision-key              vendor API key (reserved)
+     --confidence-threshold    minimum confidence per step
+     --max-image-mb            max upload size in MB
+     --rate-limit              requests per window
+     --rate-window             window in seconds
+     --reload / --no-reload    auto-reload on change
+     --port-search / --no-port-search   if the port is busy, try the next one
+
+NOTES AND CAVEATS
+-----------------
+- Port resilience: by default the app does not fail if the port is busy. Starting
+  at PORT (8000 by default) it tries the next free port, up to 20 attempts, and
+  prints which one it used in the console. Disable with --no-port-search
+  (or PORT_SEARCH=false) to make it fail fast instead. In `npm run dev`, the
+  backend and the Vite proxy are kept in sync automatically, and Vite picks the
+  next free port for the frontend too.
+- Closing the app releases the port: stop it with Ctrl+C. The server shuts down
+  gracefully (bash and the dev launcher forward SIGINT/SIGTERM) and the opened
+  socket is closed, so the port becomes free again.
+- Camera: works on localhost and 127.0.0.1 WITHOUT HTTPS, because the browser
+  treats those as secure origins. Browsers only block the camera on plain HTTP
+  to a non-localhost address (for example http://192.168.x.x). To use the camera
+  from a phone over the network, either serve over HTTPS (tunnel or TLS proxy) or
+  add the origin to Chrome's "insecure origins" flag. The installed app (TWA)
+  always needs HTTPS.
+- To load it as an installed PWA, build (npm run build), serve the dist/ folder,
+  and open it in Android Chrome.
+- public/.well-known/assetlinks.json holds a placeholder fingerprint. Fill in the
+  real SHA-256 when you package the TWA with Bubblewrap, and match the signing
+  keystore.
+- Never commit the .env file or the vendor key. Only the backend reads the key.
+- The result is never a diagnosis; the disclaimer is always shown.

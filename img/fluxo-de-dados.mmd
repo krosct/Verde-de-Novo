@@ -1,0 +1,45 @@
+---
+title: "Verde de Novo - fluxo de dados: da foto da folha a resposta"
+---
+flowchart TD
+  U(["Usuário: Camila<br/>vê uma folha doente"]):::user
+
+  S1["1 · NAVEGADOR<br/>Toca em Tirar foto<br/>main.ts"]:::client
+  S2["2 · NAVEGADOR<br/>Pede permissão da câmera<br/>camera.ts"]:::client
+  S2B["2b · NAVEGADOR<br/>Permissão negada?<br/>usa o seletor de arquivo<br/>camera.ts"]:::warn
+  S3["3 · NAVEGADOR<br/>Tira 1 foto da folha<br/>guia de enquadramento<br/>camera.ts + ui.ts"]:::client
+  S4["4 · NAVEGADOR<br/>Prepara a imagem: gira EXIF,<br/>reduz p/ 1280px, JPEG q0.8,<br/>remove metadados, limite ~1.5MB<br/>image.ts"]:::client
+  S5["5 · NAVEGADOR<br/>Consentimento LGPD<br/>antes do 1º envio<br/>ui.ts"]:::client
+  S6["6 · NAVEGADOR<br/>POST /api/leaf (multipart)<br/>api.ts + types.ts"]:::client
+  S7["7 · SERVIDOR<br/>Valida a imagem, rate limit,<br/>remove EXIF, NUNCA guarda a foto<br/>main.py"]:::server
+  S8["8 · SERVIDOR<br/>Lê VISION_API_KEY e chama<br/>o fornecedor de visão<br/>vendor.py + main.py"]:::server
+  S9["9 · NUVEM<br/>API de visão classifica<br/>a imagem"]:::cloud
+  S10["10 · SERVIDOR<br/>Mapeia p/ a LISTA FIXA de causas;<br/>confiança &lt; 0.6 vira unknown;<br/>monta o JSON congelado<br/>(is_diagnosis = false)<br/>vendor.py + main.py"]:::server
+  S11["11 · NAVEGADOR<br/>Recebe a resposta tipada<br/>api.ts + types.ts"]:::client
+  S12["12 · NAVEGADOR<br/>Mostra causa + confiança +<br/>o que verificar + aviso<br/>não é diagnóstico<br/>ui.ts + causes.ts"]:::client
+
+  OUT(["Usuário recebe o feedback:<br/>causa provável + o que verificar"]):::user
+  UNK(["Não reconhecido:<br/>pede outra foto<br/>(volta ao passo 1)"]):::warn
+
+  U --> S1
+  S1 --> S2
+  S2 -->|negada| S2B
+  S2 -->|autorizada| S3
+  S2B --> S3
+  S3 --> S4
+  S4 --> S5
+  S5 --> S6
+  S6 -->|HTTPS| S7
+  S7 --> S8
+  S8 --> S9
+  S9 --> S10
+  S10 --> S11
+  S11 --> S12
+  S12 --> OUT
+  S12 -.->|confiança baixa ou folha ilegível| UNK
+
+  classDef user fill:#1b4332,color:#ffffff,stroke:#081c15,stroke-width:2px
+  classDef client fill:#d8f3dc,color:#081c15,stroke:#40916c
+  classDef server fill:#ffe8cc,color:#3d2b00,stroke:#e08e0b
+  classDef cloud fill:#dbeafe,color:#1e3a8a,stroke:#3b82f6
+  classDef warn fill:#fee2e2,color:#7f1d1d,stroke:#dc2626
