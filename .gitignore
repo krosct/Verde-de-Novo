@@ -1,0 +1,15 @@
+node_modules
+dist
+dev-dist
+.env
+.env.*
+!env.example
+*.local
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.venv
+
+# local agent instructions
+AGENTS.md
